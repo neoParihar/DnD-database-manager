@@ -1,3 +1,5 @@
+package server;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -20,8 +22,9 @@ public class ClientHandler implements Runnable {
       this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
       this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
       this.clientUsername = bufferedReader.readLine();
-      clientHandler.add(this);
+      clientHandlers.add(this);
       printToLog("DM: " + clientUsername + " has joined the game!");
+
     } catch (IOException e) {
       closeEverything(socket, bufferedReader, bufferedWriter);
     }
@@ -36,7 +39,7 @@ public class ClientHandler implements Runnable {
         clientMessage = bufferedReader.readLine();
         printToLog(clientMessage);
       } catch (IOException e) {
-        closeEverythig(socket, bufferedReader, bufferedWriter);
+        closeEverything(socket, bufferedReader, bufferedWriter);
         break;
       }
     }
@@ -45,11 +48,11 @@ public class ClientHandler implements Runnable {
   public void printToLog(String clientMessage) {
     for (ClientHandler clientHandler : clientHandlers) {
       try {
-        clientHandler.bufferedWriter.write(clientMessage)
-        clientHandler.bufferedWriter.newline();
+        clientHandler.bufferedWriter.write(clientMessage);
+        clientHandler.bufferedWriter.newLine();
         clientHandler.bufferedWriter.flush();
       } catch (IOException e) {
-          closeEverything(socket, bufferedReader, bufferedWriter);
+        closeEverything(socket, bufferedReader, bufferedWriter);
       }
     }
   }
