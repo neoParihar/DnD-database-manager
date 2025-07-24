@@ -1,4 +1,4 @@
-package src;
+package server;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -6,6 +6,7 @@ import java.net.Socket;
 
 public class Server {
   private ServerSocket serverSocket;
+  private static final int PORT = 1234;
 
   public Server(ServerSocket serverSocket) {
     this.serverSocket = serverSocket;
@@ -18,7 +19,7 @@ public class Server {
         System.out.println("A new client has connected!");
         ClientHandler clientHandler = new ClientHandler(socket);
 
-        Thread user = new Thread(clientHandler);
+        new Thread(clientHandler);
       }
     } catch (IOException e) {
       closeServer();
@@ -36,7 +37,7 @@ public class Server {
   }
 
   public static void main(String[] args) throws IOException {
-    ServerSocket serverSocket = new ServerSocket(1234);
+    ServerSocket serverSocket = new ServerSocket(PORT);
     Server server = new Server(serverSocket);
     server.startServer();
   }

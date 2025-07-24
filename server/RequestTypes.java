@@ -1,0 +1,6 @@
+package server;
+
+public enum RequestTypes {
+  LOGIN, ADDCAMPAIGN, REMOVECAMPAIGN, EDITCAMPAIGN, ADDPLAYER,
+  VIEWPLAYER, REMOVEPLAYER
+}
