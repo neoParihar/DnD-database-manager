@@ -1,10 +1,8 @@
 package server;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 
@@ -12,64 +10,75 @@ public class ClientHandler implements Runnable {
 
   public static ArrayList<ClientHandler> clientHandlers = new ArrayList<>();
   private Socket socket;
-  private BufferedReader bufferedReader;
-  private BufferedWriter bufferedWriter;
-  private String clientUsername;
+  private ObjectInputStream inputStream;
+  private ObjectOutputStream outputStream;
 
   public ClientHandler(Socket socket) {
     try {
       this.socket = socket;
-      this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-      this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-      this.clientUsername = bufferedReader.readLine();
+      this.inputStream = new ObjectInputStream(socket.getInputStream());
+      this.outputStream = new ObjectOutputStream(socket.getOutputStream());
+
       clientHandlers.add(this);
-      printToLog("DM: " + clientUsername + " has joined the game!");
+      System.out.println("SERVER: Someone has joined the game!");
 
     } catch (IOException e) {
-      closeEverything(socket, bufferedReader, bufferedWriter);
+      closeEverything();
     }
   }
 
   @Override
   public void run() {
-    String clientMessage;
-
     while (socket.isConnected()) {
       try {
-        clientMessage = bufferedReader.readLine();
-        printToLog(clientMessage);
-      } catch (IOException e) {
-        closeEverything(socket, bufferedReader, bufferedWriter);
+        Request clientRequest = (Request) inputStream.readObject();
+        handleRequest(clientRequest);
+      } catch (Exception e) {
+        closeEverything();
+        e.printStackTrace();
         break;
       }
     }
   }
 
-  public void printToLog(String clientMessage) {
-    for (ClientHandler clientHandler : clientHandlers) {
-      try {
-        clientHandler.bufferedWriter.write(clientMessage);
-        clientHandler.bufferedWriter.newLine();
-        clientHandler.bufferedWriter.flush();
-      } catch (IOException e) {
-        closeEverything(socket, bufferedReader, bufferedWriter);
-      }
+  public void handleRequest(Request request) throws IOException {
+    switch (request.getRequestType()) {
+      case TEST:
+        Request testComplete = new Request(RequestTypes.TEST, "Server Connected");
+        outputStream.writeObject(testComplete);
+        outputStream.flush();
+      case DISCONNECT:
+        this.removeClientHandler();
+        this.closeEverything();
     }
   }
 
+  /**
+   * public void printToLog(String clientMessage) {
+   * for (ClientHandler clientHandler : clientHandlers) {
+   * try {
+   * clientHandler.bufferedWriter.write(clientMessage);
+   * clientHandler.bufferedWriter.newLine();
+   * clientHandler.bufferedWriter.flush();
+   * } catch (IOException e) {
+   * closeEverything(socket, inputStream, bufferedWriter);
+   * }
+   * }
+   * }
+   **/
   public void removeClientHandler() {
     clientHandlers.remove(this);
-    printToLog("DM: " + clientUsername + " has left the game.");
+    System.out.println("SERVER: Someone has left");
   }
 
-  public void closeEverything(Socket socket, BufferedReader bufferedReader, BufferedWriter bufferedWriter) {
+  public void closeEverything() {
     removeClientHandler();
     try {
-      if (bufferedReader != null) {
-        bufferedReader.close();
+      if (inputStream != null) {
+        inputStream.close();
       }
-      if (bufferedWriter != null) {
-        bufferedWriter.close();
+      if (outputStream != null) {
+        outputStream.close();
       }
       if (socket != null) {
         socket.close();
