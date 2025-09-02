@@ -16,10 +16,10 @@ public class Server {
     try {
       while (!serverSocket.isClosed()) {
         Socket socket = serverSocket.accept();
-        System.out.println("A new client has connected!");
-        ClientHandler clientHandler = new ClientHandler(socket);
+        System.out.println("SERVER: Someone has joined the game!");
 
-        new Thread(clientHandler);
+        Thread newHandler = new Thread(new ClientHandler(socket));
+        newHandler.start();
       }
     } catch (IOException e) {
       closeServer();
@@ -39,6 +39,7 @@ public class Server {
   public static void main(String[] args) throws IOException {
     ServerSocket serverSocket = new ServerSocket(PORT);
     Server server = new Server(serverSocket);
+    System.out.println("Server is listening..");
     server.startServer();
   }
 }

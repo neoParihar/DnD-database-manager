@@ -1,6 +1,8 @@
-package server;
+package shared;
 
-public class Request {
+import java.io.Serializable;
+
+public class Request implements Serializable {
 
   protected RequestTypes requestType;
   protected String message;

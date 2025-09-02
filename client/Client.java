@@ -1,8 +1,6 @@
 package client;
 
-import server.Request;
-import server.RequestTypes;
-
+import shared.*;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -19,6 +17,7 @@ public class Client implements Runnable {
     try {
       this.socket = new Socket("localhost", 1234);
       this.outputStream = new ObjectOutputStream(socket.getOutputStream());
+      outputStream.flush();
       this.inputStream = new ObjectInputStream(socket.getInputStream());
       this.testGUI = new Test(this);
     } catch (IOException e) {
@@ -38,16 +37,20 @@ public class Client implements Runnable {
     }
   }
 
-  public static void main() throws IOException {
-    new Client();
+  public static void main(String[] args) throws IOException {
+    Client client = new Client();
+    Thread clientThread = new Thread(client);
+    clientThread.start();
   }
 
   public void handleRequest(Request request) {
     switch (request.getRequestType()) {
       case TEST:
         testGUI.setlabel(request.getMessage());
+        break;
       default:
-
+        System.out.println("Server sent a bad request");
+        break;
     }
   }
 
@@ -69,9 +72,10 @@ public class Client implements Runnable {
 
   public void sendRequest(Request request) {
     try {
+      System.out.println("CLIENT: Sending request " + request.getRequestType());
       outputStream.writeObject(request);
       outputStream.flush();
-    } catch (IOException ie) {
+    } catch (Exception ie) {
       ie.printStackTrace();
     }
 

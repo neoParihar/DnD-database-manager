@@ -1,5 +1,6 @@
 package server;
 
+import shared.*;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -16,11 +17,12 @@ public class ClientHandler implements Runnable {
   public ClientHandler(Socket socket) {
     try {
       this.socket = socket;
-      this.inputStream = new ObjectInputStream(socket.getInputStream());
       this.outputStream = new ObjectOutputStream(socket.getOutputStream());
+      outputStream.flush();
+      this.inputStream = new ObjectInputStream(socket.getInputStream());
 
       clientHandlers.add(this);
-      System.out.println("SERVER: Someone has joined the game!");
+      System.out.println("ClientHandler created!");
 
     } catch (IOException e) {
       closeEverything();
@@ -31,7 +33,9 @@ public class ClientHandler implements Runnable {
   public void run() {
     while (socket.isConnected()) {
       try {
+        System.out.println("SERVER: waiting for request..");
         Request clientRequest = (Request) inputStream.readObject();
+        System.out.println("SERVER: Received " + clientRequest.getRequestType() + " Request!");
         handleRequest(clientRequest);
       } catch (Exception e) {
         closeEverything();
@@ -47,9 +51,14 @@ public class ClientHandler implements Runnable {
         Request testComplete = new Request(RequestTypes.TEST, "Server Connected");
         outputStream.writeObject(testComplete);
         outputStream.flush();
+        break;
       case DISCONNECT:
         this.removeClientHandler();
         this.closeEverything();
+        break;
+      default:
+        System.out.println("Something was wrong with Request");
+        break;
     }
   }
 
@@ -67,8 +76,8 @@ public class ClientHandler implements Runnable {
    * }
    **/
   public void removeClientHandler() {
-    clientHandlers.remove(this);
     System.out.println("SERVER: Someone has left");
+    clientHandlers.remove(this);
   }
 
   public void closeEverything() {

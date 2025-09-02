@@ -2,9 +2,7 @@ package client;
 
 import javax.swing.*;
 
-import server.Request;
-import server.RequestTypes;
-
+import shared.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
